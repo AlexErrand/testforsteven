@@ -1,13 +1,22 @@
 //import Dygraph from 'dygraphs';
 //import {InfluxDBClient, Point} from '@influxdata/influxdb3-client'
 
-
 var socket = io.connect('/');
-const token = process.env.INFLUXDB_TOKEN
+
 
 // Set up button event listener
 //document.getElementById('loadGraphButton').addEventListener('click', createGraph);
 document.getElementById('data').addEventListener('click', humidity);
+
+socket.on('minuteQueryResponse', function(data) {
+  console.log(data); // This will log the data received from the server
+  // Process the received data as needed
+});
+
+function minuteQuery() {
+  socket.emit('minuteQueryRequest');
+}
+
 socket.on('buttonPushedEvent', function(data) {
   const userInput = prompt("Please enter your name:");
   alert(data);
@@ -58,31 +67,5 @@ function humidity(){
     console.log('humidity ideal');
   }
   socket.emit('humidityResponse', {})
-  
-}
-
-async function minuteQuery(){
-  
-
-  
-  console.log("rogelio is gay");
-  const client = new InfluxDBClient({host: 'https://us-east-1-1.aws.cloud2.influxdata.com', token: token})
-  const query = `SELECT * FROM 'PlantSensor1'
-  WHERE time >= now() - interval '1 minute' AND
-  ('moisture' IS NOT NULL OR 'tempF' IS NOT NULL OR 'humidity' IS NOT NULL) order by time asc`
-
-  const rows = await client.query(query, 'iotProject')
-  
-
-  //console.log(`${"humidty".padEnd(5)}${"moisture".padEnd(5)}${"tempF".padEnd(10)}`);
-  for await (const row of rows) {
-      let humidty = row.humidity || '';
-      let moisture = row.moisture || '';
-      let tempF = row.tempF;
-      socket.emit('minuteQuery', `${humidity.toString().padEnd(5)}${moisture.toString().padEnd(5)}${tempF.toString.padEnd(10)}`);
-      console.log(`${humidity.toString().padEnd(5)}${moisture.toString().padEnd(5)}${tempF.toString.padEnd(10)}`);
-  }
-  client.close()
-  
   
 }

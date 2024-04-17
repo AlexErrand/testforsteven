@@ -6,6 +6,8 @@
 const express = require("express");
 const app = express();
 const socket = require("socket.io");
+const influx = require('@influxdata/influxdb3-client');
+const token = process.env.INFLUXDB_TOKEN
 
 // make all the files in 'public' available
 // https://expressjs.com/en/starter/static-files.html
@@ -27,6 +29,36 @@ var io = socket(listener);
 io.on("connection", function (socket) {
   console.log("Yay, I have a new friend!");
   socket.emit("colorChangedEvent", currentColor);
+
+  // connect to db
+  socket.on('minuteQueryRequest', async function () {
+    const client = new influx.InfluxDB({host: 'https://us-east-1-1.aws.cloud2.influxdata.com', token: token});
+    const query = `SELECT * FROM 'PlantSensor1'
+    WHERE time >= now() - interval '1 minute' AND
+    ('moisture' IS NOT NULL OR 'tempF' IS NOT NULL OR 'humidity' IS NOT NULL) order by time asc`;
+    
+    const rows = await client.query(query, 'iotProject');
+    
+    let dataToSend = [];
+
+    for await (const row of rows) {
+      let humidity = row.humidity || '';
+      let moisture = row.moisture || '';
+      let tempF = row.tempF;
+
+      dataToSend.push({
+        humidity: humidity,
+        moisture: moisture,
+        tempF: tempF
+      });
+    }
+
+    client.close();
+
+    socket.emit('minuteQueryResponse', dataToSend);
+  });
+
+
 
   //for plant
   socket.on('socketName', function(data) {

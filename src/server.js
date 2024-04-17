@@ -17,52 +17,54 @@ const listener = app.listen(process.env.PORT, () => {
 });
 
 // database (temp, rip)
-var currentColor = '#0000ff';
+var currentColor = "#FFCD00";
+var socketName = "placeholder";
 
 // socket stuff
 
-var io = socket( listener ); 
+var io = socket(listener);
 
-io.on( "connection", function( socket )
-{
-  console.log('Yay, I have a new friend!');
-  socket.emit( 'colorChangedEvent', currentColor );
-  
-  socket.on( 'buttonPushedEvent', function( data )
-  {
-    console.log('user pressed their button :(');
-    socket.emit( 'buttonPushedResponse', 'pls stop ;)');
+io.on("connection", function (socket) {
+  console.log("Yay, I have a new friend!");
+  socket.emit("colorChangedEvent", currentColor);
+
+  //for plant
+  socket.on('socketName', function(data) {
+    console.log('Socket name received: ', data);
+    // Add socketName to the database
+    //db.collection('users').add({ name: socketName });
   });
-  
-  socket.on( 'colorChangedEvent', function( data )
-  {
+  //from class
+  socket.on("buttonPushedEvent", function (data) {
+    console.log("user pressed their button :(");
+    socket.emit("buttonPushedResponse", "coming soon");
+  });
+
+  socket.on("colorChangedEvent", function (data) {
     currentColor = data;
-    socket.broadcast.emit( 'colorChangedEvent', data );
+    socket.broadcast.emit("colorChangedEvent", data);
   });
-  
-  socket.on( 'moodChanged', function( data )
-  {
+
+  socket.on("moodChanged", function (data) {
     // example: record mood in a database...
     // TODO (chatgpt)
-    
+
     // tell my friends
-    socket.broadcast.emit( 'moodChanged', data );
+    socket.broadcast.emit("moodChanged", data);
   });
-  
+  socket.on("humidityResponse", function (data) {
+    console.log("No mami");
+    socket.emit("humidityEvent", "hello");
+  });
 });
 
-function generateAverageSensorValue()
-{
+function generateAverageSensorValue() {
   const min = 70;
   const max = 80;
-  return Math.random() * (max-min) + min;
+  return Math.random() * (max - min) + min;
 }
 
-setInterval( () =>
-{
+setInterval(() => {
   // DO WHAT EVERY 1000ms
-  io.emit( 'sensor-average', generateAverageSensorValue().toFixed(2) );
-  
-}, 1000 );
-
-
+  io.emit("sensor-average", generateAverageSensorValue().toFixed(2));
+}, 1000);

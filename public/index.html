@@ -1,0 +1,100 @@
+<!-- This is a static file -->
+<!-- served from your routes in server.js -->
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Welcome to Glitch!</title>
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="description" content="A cool thing made with Glitch" />
+    <link
+      id="favicon"
+      rel="icon"
+      href="https://glitch.com/edit/favicon-app.ico"
+      type="image/x-icon"
+    />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/dygraph/2.1.0/dygraph.min.js"></script>
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/dygraph/2.1.0/dygraph.min.css"
+    />
+    <!-- import the webpage's stylesheet -->
+    <link rel="stylesheet" href="/src/style.css" />
+
+    <!-- import the webpage's client-side javascript file -->
+    <script src="https://cdn.socket.io/4.6.0/socket.io.min.js"></script>
+    <script src="/script.js" defer></script>
+  </head>
+  <body>
+    <header>
+      <h1>Team 8's Epic plant sensor</h1>
+    </header>
+
+    <main>
+      <h2>Here is the data you can display:</h2>
+
+      <!--       <button id="loadGraphButton" onclick= "graphButton()" </button> -->
+      <button id="data">Data button</button>
+      <button id="myButton">Add Sensor</button>
+      
+      
+
+      <div id="inputFieldContainer" style="display: none">
+        <h3>Enter sensor name:</h3>
+        <input type="text" id="sensor" name="sensor" />
+        <button type="submit">Add</button>
+      </div>
+
+      <div
+        id="graphdiv"
+        style="display: none; width: 100%; height: 500px"
+      ></div>
+
+      <script>
+        const myButton = document.getElementById("myButton");
+        //const submitButton = document.getElementById("submitSensor");
+        const inputFieldContainer = document.getElementById(
+          "inputFieldContainer"
+        );
+        const sensorInput = document.getElementById("sensor");
+
+        myButton.addEventListener("click", function () {
+          inputFieldContainer.style.display = "block"; // Show the container
+        });
+
+//         submitButton.addEventListener("click", function () {
+//           const sensorName = sensorInput.value; // Get the value from the input
+//           // Send sensorName to the server
+//           socket.emit("sensorName", sensorName);
+//           inputFieldContainer.style.display = "none"; // Hide the container on submit
+//           //if datastream, display graph, for now display graphs with random data
+        
+//         });
+        
+        
+
+      </script>
+
+      <!--       <html>
+        <head>
+          <script type="text/javascript" src="dygraph.js"></script>
+          <link rel="stylesheet" type="text/css" src="dygraph.css" />
+        </head>        <body>
+          <div id="graphdiv"></div>
+          <script type="text/javascript">
+            Dygraph.onDOMready(function onDOMready() {
+              g = new Dygraph(
+                document.getElementById("graphdiv"),
+                "Date,Temperature\n" +
+                  "2008-05-07,75\n" +
+                  "2008-05-08,70\n" +
+                  "2008-05-09,80\n"
+              );
+            });
+          </script>
+        </body>
+      </html> -->
+    </main>
+  </body>
+</html>

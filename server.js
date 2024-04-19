@@ -6,8 +6,9 @@
 const express = require("express");
 const app = express();
 const socket = require("socket.io");
-const influx = require('@influxdata/influxdb3-client');
-const token = process.env.INFLUXDB_TOKEN
+const { InfluxDBClient,Point }= require('@influxdata/influxdb3-client');
+const token = 'UqNZKU_xO5XLIGBPHSBtw6oDtRGHib5yMQa-misHjAI-ZKRMXRs_SJRMY2E76riPyyuglIIE9WC-XxUM74H-Sg=='
+//const token = process.env.INFLUXDB_TOKEN
 
 // make all the files in 'public' available
 // https://expressjs.com/en/starter/static-files.html
@@ -32,7 +33,7 @@ io.on("connection", function (socket) {
 
   // connect to db
   socket.on('minuteQueryRequest', async function () {
-    const client = new influx.InfluxDB({host: 'https://us-east-1-1.aws.cloud2.influxdata.com', token: token});
+    const client = new InfluxDBClient({host: 'https://us-east-1-1.aws.cloud2.influxdata.com', token: token})
     const query = `SELECT * FROM 'PlantSensor1'
     WHERE time >= now() - interval '1 minute' AND
     ('moisture' IS NOT NULL OR 'tempF' IS NOT NULL OR 'humidity' IS NOT NULL) order by time asc`;
@@ -40,18 +41,30 @@ io.on("connection", function (socket) {
     const rows = await client.query(query, 'iotProject');
     
     let dataToSend = [];
-
+    let humiditySum = 0;
+    let tempSum = 0;
+    let moistureSum = 0;
+    let count = 0;
     for await (const row of rows) {
       let humidity = row.humidity || '';
       let moisture = row.moisture || '';
       let tempF = row.tempF;
-
-      dataToSend.push({
-        humidity: humidity,
-        moisture: moisture,
-        tempF: tempF
-      });
+      count += 1
+      //console.log("humidity in for " + Number(humidity))
+      //console.log("humidity sum in for " + humiditySum)
+      humiditySum += Number(humidity);
+      tempSum += Number(tempF);
+      moistureSum += Number(moisture);      
     }
+    // console.log("humidity sum " + humiditySum)
+    // console.log("Humidty " + (humiditySum/ count) )
+    // console.log("Temp " + (tempSum/ count))
+    // console.log("moisture " + (moistureSum/ count))
+    dataToSend.push({
+      humidity: (humiditySum/ count),
+      moisture: (moistureSum/ count),
+      tempF: (tempSum/ count)
+    });
 
     client.close();
 

@@ -1,12 +1,11 @@
 //import Dygraph from 'dygraphs';
-//import {InfluxDBClient, Point} from '@influxdata/influxdb3-client'
 
 var socket = io.connect('/');
 
 
 // Set up button event listener
 //document.getElementById('loadGraphButton').addEventListener('click', createGraph);
-document.getElementById('data').addEventListener('click', humidity);
+document.getElementById('data').addEventListener('click', minuteQuery);
 
 socket.on('minuteQueryResponse', function(data) {
   console.log(data); // This will log the data received from the server
@@ -34,9 +33,9 @@ socket.on('moodChanged', function(data) {
   document.getElementById('mood').value = data;
 });
 
-socket.on('sensor-average', function(data) {
-  console.log(data);
-});
+// socket.on('sensor-average', function(data) {
+//   console.log(data);
+// });
 socket.on('humidityEvent', function(data) {
   console.log(data);
   alert(data);
@@ -54,7 +53,7 @@ function temperature() {
 }
 
 function humidity(){
-  console.log("rogelio is super gay");
+  console.log("in humidity");
   //fetch humidity data
   var humidity = 50;
   if(humidity < 40){

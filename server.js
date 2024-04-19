@@ -72,6 +72,46 @@ io.on("connection", function (socket) {
   });
 
 
+  socket.on('hourQueryRequest', async function () {
+    const client = new InfluxDBClient({host: 'https://us-east-1-1.aws.cloud2.influxdata.com', token: token})
+    const query = `SELECT * FROM 'PlantSensor1'
+    WHERE time >= now() - interval '1 hour' AND
+    ('moisture' IS NOT NULL OR 'tempF' IS NOT NULL OR 'humidity' IS NOT NULL) order by time asc`;
+    
+    const rows = await client.query(query, 'iotProject');
+    
+    let dataToSend = [];
+    let humiditySum = 0;
+    let tempSum = 0;
+    let moistureSum = 0;
+    let count = 0;
+    for await (const row of rows) {
+      let humidity = row.humidity || '';
+      let moisture = row.moisture || '';
+      let tempF = row.tempF;
+      count += 1
+      //console.log("temp in for " + Number(tempF))
+      //console.log("humidity sum in for " + humiditySum)
+      humiditySum += Number(humidity);
+      tempSum += Number(tempF);
+      moistureSum += Number(moisture);      
+    }
+    // console.log("humidity sum " + humiditySum)
+    // console.log("Humidty " + (humiditySum/ count) )
+    // console.log("Temp " + (tempSum/ count))
+    // console.log("moisture " + (moistureSum/ count))
+    dataToSend.push({
+      humidity: (humiditySum/ count),
+      moisture: (moistureSum/ count),
+      tempF: (tempSum/ count)
+    });
+
+    client.close();
+
+    socket.emit('hourQueryResponse', dataToSend);
+  });
+
+
 
   //for plant
   socket.on('socketName', function(data) {

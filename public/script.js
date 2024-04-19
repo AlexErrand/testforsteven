@@ -6,17 +6,23 @@ const sensorList = [];
 // Set up button event listener
 //document.getElementById('loadGraphButton').addEventListener('click', createGraph);
 document.getElementById('data').addEventListener('click', minuteQuery);
-document.getElementById('myButton').addEventListener('click', function(){
+document.addEventListener('DOMContentLoaded', () => {
+  document.getElementById('myButton').addEventListener('click', function () {
     console.log("right after dom thingy")
-    const addButton = document.getElementById('addButton');
-    addButton.addEventListener('click', function() {
-      console.log("right after add button")
-      const sensorName = document.getElementById("sensor").value;
-      sensorList.append(sensorName);
-      console.log("Sensor list " + sensorList);
-      document.getElementById("sensor").value = ""; // clear the input field
-    });
+    document.getElementById("inputFieldContainer").style.display = "block";
   });
+
+  const addButton = document.getElementById('addButton');
+  
+  addButton.addEventListener('click', function () {
+    console.log("right after add button")
+    const sensorName = document.getElementById("sensor").value;
+    sensorList.push(sensorName);
+    console.log("Sensor list " + sensorList);
+    document.getElementById("sensor").value = ""; // clear the input field
+  });
+});
+
 
 
 setInterval(allSensorsMinute, 60000); // every minute calls minute query

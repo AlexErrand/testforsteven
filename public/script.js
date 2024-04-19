@@ -1,13 +1,26 @@
 //import Dygraph from 'dygraphs';
 
 var socket = io.connect('/');
-
+const sensorList = [];
 
 // Set up button event listener
 //document.getElementById('loadGraphButton').addEventListener('click', createGraph);
 document.getElementById('data').addEventListener('click', minuteQuery);
+document.getElementById('myButton').addEventListener('click', function(){
+  //document.addEventListener("DOMContentLoaded", function(){
+    console.log("right after dom thingy")
+    const addButton = document.getElementById('addButton');
+    addButton.addEventListener('click', function() {
+      console.log("right after add button")
+      const sensorName = document.getElementById("sensor").value;
+      sensorList.append(sensorName);
+      console.log("Sensor list " + sensorList);
+      document.getElementById("sensor").value = ""; // clear the input field
+    });
+  });
+//});
 
-setInterval(minuteQuery, 60000); // every minute calls minute query
+setInterval(allSensors, 60000); // every minute calls minute query
 
 socket.on('minuteQueryResponse', function(data) {
   console.log(data); // This will log the data received from the server
@@ -24,8 +37,8 @@ socket.on('hourQueryResponse', function(data) {
   // Process the received data as needed
 });
 
-function minuteQuery() {
-  socket.emit('minuteQueryRequest');
+function minuteQuery(sensor) {
+  socket.emit('minuteQueryRequest',sensor);
 }
 
 function hourQuery() {
@@ -100,4 +113,13 @@ function moisture(moisture){
   }
   //socket.emit('moistureResponse', {})
   
+}
+function allSensors(){
+  if (sensorList.length != 0){
+    sensorList.forEach(element => {
+      minuteQuery(element)
+    });
+  }
+  
+
 }

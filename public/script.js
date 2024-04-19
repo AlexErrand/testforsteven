@@ -7,7 +7,6 @@ const sensorList = [];
 //document.getElementById('loadGraphButton').addEventListener('click', createGraph);
 document.getElementById('data').addEventListener('click', minuteQuery);
 document.getElementById('myButton').addEventListener('click', function(){
-  //document.addEventListener("DOMContentLoaded", function(){
     console.log("right after dom thingy")
     const addButton = document.getElementById('addButton');
     addButton.addEventListener('click', function() {
@@ -18,9 +17,10 @@ document.getElementById('myButton').addEventListener('click', function(){
       document.getElementById("sensor").value = ""; // clear the input field
     });
   });
-//});
 
-setInterval(allSensors, 60000); // every minute calls minute query
+
+setInterval(allSensorsMinute, 60000); // every minute calls minute query
+setInterval(allSensorsHour, 600000); // every minute calls minute query
 
 socket.on('minuteQueryResponse', function(data) {
   console.log(data); // This will log the data received from the server
@@ -35,6 +35,13 @@ socket.on('hourQueryResponse', function(data) {
   moisture(dataAccess.moisture);
   console.log("Temp:" + dataAccess.tempF + " Huidity:" + dataAccess.humidity+" Moisture:" + dataAccess.moisture); // This will log the data received from the server
   // Process the received data as needed
+});
+socket.on('checkSensorResponse', function(data) {
+  console.log("In check sensor response")
+  const dataAccess = data[0];
+  if (dataAccess.tempF != 0 || dataAccess.humidity !=0 || dataAccess.moisture != 0 ){
+    sensorList.append(dataAccess.sensor);
+  }
 });
 
 function minuteQuery(sensor) {
@@ -114,12 +121,22 @@ function moisture(moisture){
   //socket.emit('moistureResponse', {})
   
 }
-function allSensors(){
+function checkSensor(sensor)
+{
+  socket.emit('checkSensorRequest',sensor);
+}
+
+function allSensorsMinute(){
   if (sensorList.length != 0){
     sensorList.forEach(element => {
       minuteQuery(element)
     });
   }
-  
-
+}
+function allSensorsHour(){
+  if (sensorList.length != 0){
+    sensorList.forEach(element => {
+      hourQuery(element)
+    });
+  }
 }

@@ -29,12 +29,12 @@ var io = socket(listener);
 
 io.on("connection", function (socket) {
   console.log("Yay, I have a new friend!");
-  socket.emit("colorChangedEvent", currentColor);
+  //socket.emit("colorChangedEvent", currentColor);
 
   // connect to db
-  socket.on('minuteQueryRequest', async function (data) {
+  socket.on('minuteQueryRequest', async function (sensor) { //gets sum of values of past minute for sensor given
     const client = new InfluxDBClient({host: 'https://us-east-1-1.aws.cloud2.influxdata.com', token: token})
-    const query = `SELECT * FROM '${data}'
+    const query = `SELECT * FROM '${sensor}'
     WHERE time >= now() - interval '1 minute' AND
     ('moisture' IS NOT NULL OR 'tempF' IS NOT NULL OR 'humidity' IS NOT NULL) order by time asc`;
     
@@ -61,6 +61,7 @@ io.on("connection", function (socket) {
     // console.log("Temp " + (tempSum/ count))
     // console.log("moisture " + (moistureSum/ count))
     dataToSend.push({
+      sensor: sensor,
       humidity: (humiditySum/ count),
       moisture: (moistureSum/ count),
       tempF: (tempSum/ count)
@@ -68,13 +69,13 @@ io.on("connection", function (socket) {
 
     client.close();
 
-    socket.emit('minuteQueryResponse', dataToSend);
+    socket.emit('minuteQueryResponse', dataToSend); //sends data response to client
   });
 
 
-  socket.on('hourQueryRequest', async function () {
+  socket.on('hourQueryRequest', async function (sensor) { //gets sum of values of past hour for sensor given
     const client = new InfluxDBClient({host: 'https://us-east-1-1.aws.cloud2.influxdata.com', token: token})
-    const query = `SELECT * FROM '${data}'
+    const query = `SELECT * FROM '${sensor}'
     WHERE time >= now() - interval '1 hour' AND
     ('moisture' IS NOT NULL OR 'tempF' IS NOT NULL OR 'humidity' IS NOT NULL) order by time asc`;
     
@@ -101,6 +102,7 @@ io.on("connection", function (socket) {
     // console.log("Temp " + (tempSum/ count))
     // console.log("moisture " + (moistureSum/ count))
     dataToSend.push({
+      sensor: sensor,
       humidity: (humiditySum/ count),
       moisture: (moistureSum/ count),
       tempF: (tempSum/ count)
@@ -108,48 +110,89 @@ io.on("connection", function (socket) {
 
     client.close();
 
-    socket.emit('hourQueryResponse', dataToSend);
+    socket.emit('hourQueryResponse', dataToSend); //sends data response to client
   });
 
 
+  socket.on('checkSensorRequest', async function (sensor) { //gets sum of values of past 15 minute for sensor given used to check if sensor is valid
+    console.log("in check sensor request")
+    const client = new InfluxDBClient({host: 'https://us-east-1-1.aws.cloud2.influxdata.com', token: token})
+    const query = `SELECT * FROM '${sensor}'
+    WHERE time >= now() - interval '15 minutes' AND
+    ('moisture' IS NOT NULL OR 'tempF' IS NOT NULL OR 'humidity' IS NOT NULL) order by time asc`;
+    
+    const rows = await client.query(query, 'iotProject');
+    
+    let dataToSend = [];
+    let humiditySum = 0;
+    let tempSum = 0;
+    let moistureSum = 0;
+    let count = 0;
+    for await (const row of rows) {
+      let humidity = row.humidity || '';
+      let moisture = row.moisture || '';
+      let tempF = row.tempF;
+      count += 1
+      //console.log("temp in for " + Number(tempF))
+      //console.log("humidity sum in for " + humiditySum)
+      humiditySum += Number(humidity);
+      tempSum += Number(tempF);
+      moistureSum += Number(moisture);      
+    }
+    // console.log("humidity sum " + humiditySum)
+    // console.log("Humidty " + (humiditySum/ count) )
+    // console.log("Temp " + (tempSum/ count))
+    // console.log("moisture " + (moistureSum/ count))
+    dataToSend.push({
+      sensor: sensor,
+      humidity: (humiditySum/ count),
+      moisture: (moistureSum/ count),
+      tempF: (tempSum/ count)
+    });
 
-  //for plant
-  socket.on('socketName', function(data) {
-    console.log('Socket name received: ', data);
-    // Add socketName to the database
-    //db.collection('users').add({ name: socketName });
-  });
-  //from class
-  socket.on("buttonPushedEvent", function (data) {
-    console.log("user pressed their button :(");
-    socket.emit("buttonPushedResponse", "coming soon");
-  });
+    client.close();
 
-  socket.on("colorChangedEvent", function (data) {
-    currentColor = data;
-    socket.broadcast.emit("colorChangedEvent", data);
-  });
-
-  socket.on("moodChanged", function (data) {
-    // example: record mood in a database...
-    // TODO (chatgpt)
-
-    // tell my friends
-    socket.broadcast.emit("moodChanged", data);
-  });
-  socket.on("humidityResponse", function (data) {
-    console.log("No mami");
-    socket.emit("humidityEvent", "hello");
+    socket.emit('checkSensorResponse', dataToSend); // sends data to client
   });
 });
 
-function generateAverageSensorValue() {
-  const min = 70;
-  const max = 80;
-  return Math.random() * (max - min) + min;
-}
+// function generateAverageSensorValue() {
+//   const min = 70;
+//   const max = 80;
+//   return Math.random() * (max - min) + min;
+// }
 
-setInterval(() => {
-  // DO WHAT EVERY 1000ms
-  io.emit("sensor-average", generateAverageSensorValue().toFixed(2));
-}, 1000);
+// setInterval(() => {
+//   // DO WHAT EVERY 1000ms
+//   io.emit("sensor-average", generateAverageSensorValue().toFixed(2));
+// }, 1000);
+
+
+//for plant
+  // socket.on('socketName', function(data) {
+  //   console.log('Socket name received: ', data);
+  //   // Add socketName to the database
+  //   //db.collection('users').add({ name: socketName });
+  // });
+  //from class
+  // socket.on("buttonPushedEvent", function (data) {
+  //   console.log("user pressed their button :(");
+  //   socket.emit("buttonPushedResponse", "coming soon");
+  // });
+
+  // socket.on("colorChangedEvent", function (data) {
+  //   currentColor = data;
+  //   socket.broadcast.emit("colorChangedEvent", data);
+  // });
+
+  // socket.on("moodChanged", function (data) {
+  //   // example: record mood in a database...
+  //   // TODO (chatgpt)
+
+  //   // tell my friends
+  //   socket.broadcast.emit("moodChanged", data);
+  // });
+  // socket.on("humidityResponse", function (data) {
+  //   console.log("No mami");
+  //   socket.emit("humidityEvent", "hello");
+  // });

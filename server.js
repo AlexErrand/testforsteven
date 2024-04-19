@@ -32,9 +32,9 @@ io.on("connection", function (socket) {
   socket.emit("colorChangedEvent", currentColor);
 
   // connect to db
-  socket.on('minuteQueryRequest', async function () {
+  socket.on('minuteQueryRequest', async function (data) {
     const client = new InfluxDBClient({host: 'https://us-east-1-1.aws.cloud2.influxdata.com', token: token})
-    const query = `SELECT * FROM 'PlantSensor1'
+    const query = `SELECT * FROM '${data}'
     WHERE time >= now() - interval '1 minute' AND
     ('moisture' IS NOT NULL OR 'tempF' IS NOT NULL OR 'humidity' IS NOT NULL) order by time asc`;
     
@@ -74,7 +74,7 @@ io.on("connection", function (socket) {
 
   socket.on('hourQueryRequest', async function () {
     const client = new InfluxDBClient({host: 'https://us-east-1-1.aws.cloud2.influxdata.com', token: token})
-    const query = `SELECT * FROM 'PlantSensor1'
+    const query = `SELECT * FROM '${data}'
     WHERE time >= now() - interval '1 hour' AND
     ('moisture' IS NOT NULL OR 'tempF' IS NOT NULL OR 'humidity' IS NOT NULL) order by time asc`;
     

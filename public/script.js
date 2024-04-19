@@ -5,7 +5,9 @@ var socket = io.connect('/');
 
 // Set up button event listener
 //document.getElementById('loadGraphButton').addEventListener('click', createGraph);
-document.getElementById('data').addEventListener('click', hourQuery);
+document.getElementById('data').addEventListener('click', minuteQuery);
+
+setInterval(minuteQuery, 60000); // every minute calls minute query
 
 socket.on('minuteQueryResponse', function(data) {
   console.log(data); // This will log the data received from the server
